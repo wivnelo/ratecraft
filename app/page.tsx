@@ -17,25 +17,27 @@ type QuoteState = {
   deliverables: string;
 };
 
+const storageKey = "ratecraft-cn-quote";
+
 const defaults: QuoteState = {
-  projectType: "Website launch",
-  client: "Acme Studio",
-  hourlyRate: 95,
-  hours: 42,
-  expenses: 350,
+  projectType: "企业官网改版",
+  client: "某某科技",
+  hourlyRate: 450,
+  hours: 56,
+  expenses: 1800,
   revisions: 2,
-  risk: 12,
-  margin: 28,
-  tax: 0,
+  risk: 15,
+  margin: 32,
+  tax: 6,
   discount: 0,
   rush: false,
   deliverables:
-    "Discovery call\nProject plan\nDesign and build\nQA pass\nLaunch support",
+    "需求梳理与报价范围确认\n信息架构与页面文案整理\n首页与核心页面设计\n前端开发与移动端适配\n上线前测试与交付说明",
 };
 
-const formatter = new Intl.NumberFormat("en-US", {
+const formatter = new Intl.NumberFormat("zh-CN", {
   style: "currency",
-  currency: "USD",
+  currency: "CNY",
   maximumFractionDigits: 0,
 });
 
@@ -52,25 +54,25 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("ratecraft-quote");
+    const saved = window.localStorage.getItem(storageKey);
     if (!saved) return;
 
     try {
       setQuote({ ...defaults, ...JSON.parse(saved) });
     } catch {
-      window.localStorage.removeItem("ratecraft-quote");
+      window.localStorage.removeItem(storageKey);
     }
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem("ratecraft-quote", JSON.stringify(quote));
+    window.localStorage.setItem(storageKey, JSON.stringify(quote));
   }, [quote]);
 
   const result = useMemo(() => {
     const labor = quote.hourlyRate * quote.hours;
     const revisionBuffer = labor * (quote.revisions * 0.025);
     const riskBuffer = labor * (quote.risk / 100);
-    const rushBuffer = quote.rush ? labor * 0.18 : 0;
+    const rushBuffer = quote.rush ? labor * 0.2 : 0;
     const cost = labor + quote.expenses + revisionBuffer + riskBuffer + rushBuffer;
     const marginRate = clamp(quote.margin, 1, 75) / 100;
     const beforeDiscount = cost / (1 - marginRate);
@@ -78,10 +80,10 @@ export default function Home() {
     const beforeTax = beforeDiscount - discount;
     const tax = beforeTax * (quote.tax / 100);
     const total = beforeTax + tax;
-    const low = total * 0.88;
-    const high = total * 1.18;
+    const low = total * 0.9;
+    const high = total * 1.2;
     const effectiveRate = beforeTax / Math.max(1, quote.hours);
-    const deposit = total * 0.4;
+    const deposit = total * 0.5;
     const profit = beforeTax - cost;
 
     return {
@@ -106,19 +108,17 @@ export default function Home() {
     .map((item) => item.trim())
     .filter(Boolean);
 
-  const proposal = `Quote for ${quote.client || "your project"}
+  const proposal = `给 ${quote.client || "客户"} 的项目报价
 
-Project: ${quote.projectType}
-Recommended price range: ${money(result.low)} to ${money(result.high)}
-Fixed project quote: ${money(result.total)}
-Deposit to start: ${money(result.deposit)}
+项目类型：${quote.projectType}
+建议报价区间：${money(result.low)} - ${money(result.high)}
+固定项目报价：${money(result.total)}
+启动预付款：${money(result.deposit)}
 
-Included:
+本次包含：
 ${deliverables.map((item) => `- ${item}`).join("\n")}
 
-This quote includes planning, delivery, ${quote.revisions} revision round${
-    quote.revisions === 1 ? "" : "s"
-  }, and a ${quote.risk}% risk buffer to protect the timeline and scope.`;
+报价说明：以上价格已包含项目沟通、交付执行、${quote.revisions} 轮修改，以及 ${quote.risk}% 的风险缓冲，用于覆盖需求不确定性、排期波动和交付验收成本。若范围增加、上线时间提前或新增长期维护需求，将单独确认变更报价。`;
 
   function update<K extends keyof QuoteState>(key: K, value: QuoteState[K]) {
     setQuote((current) => ({ ...current, [key]: value }));
@@ -134,26 +134,25 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
     <main className="site-shell">
       <section className="hero">
         <div className="hero-copy">
-          <p className="eyebrow">RateCraft</p>
-          <h1>Price freelance work with margin, risk, and scope in view.</h1>
+          <p className="eyebrow">RateCraft 报价器</p>
+          <h1>给外包、咨询和自由职业项目算一个不亏钱的报价。</h1>
           <p className="hero-text">
-            A focused quote calculator for consultants, studios, and solo
-            builders who need a defensible project price before sending a
-            proposal.
+            面向国内独立开发者、设计师、小型工作室和咨询顾问。把工时、成本、
+            风险、税费和利润率放在同一张表里，生成可解释、可复制的客户报价。
           </p>
-          <div className="hero-actions" aria-label="Primary actions">
+          <div className="hero-actions" aria-label="主要操作">
             <a className="button primary" href="#calculator">
-              Calculate quote
+              开始计算
             </a>
             <a className="button secondary" href="#proposal">
-              Copy proposal
+              查看报价文案
             </a>
           </div>
         </div>
 
-        <aside className="quote-preview" aria-label="Current quote summary">
+        <aside className="quote-preview" aria-label="当前报价概览">
           <div className="preview-topline">
-            <span>Recommended quote</span>
+            <span>建议固定报价</span>
             <strong>{money(result.total)}</strong>
           </div>
           <div className="range-band">
@@ -167,19 +166,19 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
           </div>
           <dl className="preview-grid">
             <div>
-              <dt>Margin</dt>
+              <dt>目标利润率</dt>
               <dd>{quote.margin}%</dd>
             </div>
             <div>
-              <dt>Deposit</dt>
+              <dt>启动预付款</dt>
               <dd>{money(result.deposit)}</dd>
             </div>
             <div>
-              <dt>Effective rate</dt>
-              <dd>{money(result.effectiveRate)}/hr</dd>
+              <dt>折算时薪</dt>
+              <dd>{money(result.effectiveRate)}/小时</dd>
             </div>
             <div>
-              <dt>Profit</dt>
+              <dt>预估利润</dt>
               <dd>{money(result.profit)}</dd>
             </div>
           </dl>
@@ -187,14 +186,14 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
       </section>
 
       <section className="tool-layout" id="calculator">
-        <form className="panel input-panel" aria-label="Quote inputs">
+        <form className="panel input-panel" aria-label="报价输入项">
           <div className="section-heading">
-            <p>Inputs</p>
-            <h2>Scope the job</h2>
+            <p>输入</p>
+            <h2>定义项目范围</h2>
           </div>
 
           <label>
-            Project type
+            项目类型
             <input
               value={quote.projectType}
               onChange={(event) => update("projectType", event.target.value)}
@@ -202,7 +201,7 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
           </label>
 
           <label>
-            Client or lead
+            客户或线索名称
             <input
               value={quote.client}
               onChange={(event) => update("client", event.target.value)}
@@ -211,7 +210,7 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
 
           <div className="field-grid">
             <label>
-              Hourly rate
+              目标时薪
               <input
                 type="number"
                 min="0"
@@ -222,7 +221,7 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
               />
             </label>
             <label>
-              Estimated hours
+              预计工时
               <input
                 type="number"
                 min="1"
@@ -234,7 +233,7 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
 
           <div className="field-grid">
             <label>
-              Hard costs
+              外采与硬成本
               <input
                 type="number"
                 min="0"
@@ -245,7 +244,7 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
               />
             </label>
             <label>
-              Revision rounds
+              修改轮次
               <input
                 type="number"
                 min="0"
@@ -259,7 +258,7 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
           </div>
 
           <label>
-            Risk buffer
+            风险缓冲
             <div className="slider-row">
               <input
                 type="range"
@@ -273,7 +272,7 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
           </label>
 
           <label>
-            Profit margin
+            目标利润率
             <div className="slider-row">
               <input
                 type="range"
@@ -290,7 +289,7 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
 
           <div className="field-grid">
             <label>
-              Tax
+              税费比例
               <input
                 type="number"
                 min="0"
@@ -300,7 +299,7 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
               />
             </label>
             <label>
-              Discount
+              折扣比例
               <input
                 type="number"
                 min="0"
@@ -319,11 +318,11 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
               checked={quote.rush}
               onChange={(event) => update("rush", event.target.checked)}
             />
-            <span>Rush timeline</span>
+            <span>加急交付</span>
           </label>
 
           <label>
-            Deliverables
+            交付内容
             <textarea
               rows={6}
               value={quote.deliverables}
@@ -332,63 +331,62 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
           </label>
         </form>
 
-        <section className="panel result-panel" aria-label="Quote results">
+        <section className="panel result-panel" aria-label="报价结果">
           <div className="section-heading">
-            <p>Output</p>
-            <h2>Defensible price</h2>
+            <p>输出</p>
+            <h2>可解释的报价</h2>
           </div>
 
           <div className="price-card">
-            <span>Fixed quote</span>
+            <span>固定报价</span>
             <strong>{money(result.total)}</strong>
             <p>
-              Use a range of {money(result.low)} to {money(result.high)} while
-              negotiating scope.
+              谈范围时使用 {money(result.low)} - {money(result.high)} 的区间；
+              范围清楚后，用固定报价推进签约。
             </p>
           </div>
 
           <div className="breakdown">
             <div>
-              <span>Labor</span>
+              <span>人工成本</span>
               <strong>{money(result.labor)}</strong>
             </div>
             <div>
-              <span>Costs</span>
+              <span>硬成本</span>
               <strong>{money(quote.expenses)}</strong>
             </div>
             <div>
-              <span>Risk</span>
+              <span>风险缓冲</span>
               <strong>{money(result.riskBuffer)}</strong>
             </div>
             <div>
-              <span>Revisions</span>
+              <span>修改缓冲</span>
               <strong>{money(result.revisionBuffer)}</strong>
             </div>
             <div>
-              <span>Rush</span>
+              <span>加急费用</span>
               <strong>{money(result.rushBuffer)}</strong>
             </div>
             <div>
-              <span>Tax</span>
+              <span>税费</span>
               <strong>{money(result.tax)}</strong>
             </div>
           </div>
 
           <div className="strategy">
-            <h3>Pricing stance</h3>
+            <h3>报价策略</h3>
             <p>
-              Open at {money(result.high)} when the scope is still soft. Use{" "}
-              {money(result.total)} for a clean fixed bid. Avoid going below{" "}
-              {money(result.low)} unless you remove deliverables or reduce the
-              timeline risk.
+              需求还没完全定稿时，可以从 {money(result.high)} 开始沟通。范围明确、
+              交付节奏稳定时，用 {money(result.total)} 做固定项目价。不要低于{" "}
+              {money(result.low)}，除非同步删减交付项、减少修改轮次或延长排期。
             </p>
           </div>
 
           <div className="proposal" id="proposal">
             <div className="proposal-header">
-              <h3>Proposal copy</h3>
+              <h3>可复制报价文案</h3>
               <button type="button" className="button primary" onClick={copyProposal}>
-                {copied ? "Copied" : "Copy"}
+                {copied ? "已复制" : "复制"}
               </button>
             </div>
             <pre>{proposal}</pre>
@@ -396,21 +394,21 @@ This quote includes planning, delivery, ${quote.revisions} revision round${
         </section>
       </section>
 
-      <section className="growth-strip" aria-label="Monetization plan">
+      <section className="growth-strip" aria-label="商业化路径">
         <div>
-          <span>Free traffic wedge</span>
-          <strong>Quote calculator</strong>
-          <p>Targets freelancer pricing searches and proposal workflows.</p>
+          <span>免费获客入口</span>
+          <strong>外包报价计算器</strong>
+          <p>覆盖“外包报价怎么算”“自由职业报价模板”等搜索需求。</p>
         </div>
         <div>
-          <span>First paid offer</span>
-          <strong>$19 template pack</strong>
-          <p>Proposal, scope, invoice, and change-order templates.</p>
+          <span>第一付费产品</span>
+          <strong>¥29 报价模板包</strong>
+          <p>包含需求确认、报价单、合同条款、变更单和验收清单。</p>
         </div>
         <div>
-          <span>Upgrade path</span>
-          <strong>$9/mo workspace</strong>
-          <p>Saved clients, branded exports, and pricing history.</p>
+          <span>升级方向</span>
+          <strong>¥19/月 客户工作台</strong>
+          <p>保存客户、导出品牌报价单、追踪成交率和历史报价。</p>
         </div>
       </section>
     </main>

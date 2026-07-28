@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const title = "RateCraft - Freelance Quote Calculator";
+const title = "RateCraft 报价器 - 外包报价计算器";
 const description =
-  "Price freelance and consulting projects with margin, risk buffers, deposits, and proposal-ready copy.";
+  "面向国内自由职业者、独立开发者和小型工作室的外包报价计算器，支持人民币、风险缓冲、利润率、税费和可复制报价文案。";
 
 export async function generateMetadata(): Promise<Metadata> {
   const headerStore = await headers();
@@ -38,22 +38,20 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     openGraph: {
       title,
-      description:
-        "A practical quote calculator for freelancers, consultants, and studios.",
+      description,
       images: [
         {
           url: "/og.png",
           width: 1200,
           height: 630,
-          alt: "RateCraft freelance quote calculator preview",
+          alt: "RateCraft 外包报价计算器预览图",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
       title,
-      description:
-        "Price freelance projects with margin, risk buffers, and proposal-ready copy.",
+      description,
       images: ["/og.png"],
     },
   };
@@ -72,7 +70,7 @@ const jsonLd = {
   offers: {
     "@type": "Offer",
     price: "0",
-    priceCurrency: "USD",
+    priceCurrency: "CNY",
   },
   description,
 };
@@ -83,7 +81,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <script
           type="application/ld+json"

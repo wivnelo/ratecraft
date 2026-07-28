@@ -32,8 +32,9 @@ test("server-renders the RateCraft product page", async () => {
 
   const html = await response.text();
   assert.match(html, /RateCraft/);
-  assert.match(html, /Freelance Quote Calculator/);
-  assert.match(html, /Price freelance work with margin/);
+  assert.match(html, /外包报价计算器/);
+  assert.match(html, /给外包、咨询和自由职业项目算一个不亏钱的报价/);
+  assert.match(html, /人民币/);
   assert.match(html, /application\/ld\+json/);
   assert.match(html, /\/og\.png/);
   assert.doesNotMatch(html, /Your site is taking shape|codex-preview/i);
@@ -54,8 +55,10 @@ test("keeps starter assets removed and product source complete", async () => {
 
   assert.match(page, /navigator\.clipboard\.writeText/);
   assert.match(page, /localStorage\.setItem/);
-  assert.match(page, /Risk buffer/);
-  assert.match(page, /Profit margin/);
-  assert.match(page, /Proposal copy/);
+  assert.match(page, /风险缓冲/);
+  assert.match(page, /目标利润率/);
+  assert.match(page, /可复制报价文案/);
+  assert.match(layout, /lang="zh-CN"/);
+  assert.match(layout, /priceCurrency:\s*"CNY"/);
   await access(new URL("public/og.png", projectRoot));
 });
